@@ -1,0 +1,51 @@
+parameters:
+- name: checkHotFixBranch # Required as first property.
+  displayName: isHotFix # Human-readable name for the parameter.
+  type: string
+  default: "False"
+  values: 
+  - "True"
+  - "False"
+- name: toDeleteAllTags
+  displayName: deleteAllTags
+  type: string
+  default: "False"
+  values: 
+  - "True"
+  - "False"
+
+trigger: none
+pr: none
+
+variables:
+- name: HOTFIX_BRANCH_PIPELINE
+  value: ${{ parameters.checkHotFixBranch }}
+- name: DELETE_ALL_TAGS
+  value: ${{ parameters.toDeleteAllTags }}
+
+steps:
+- script: |
+      echo "italenticsdev.azurecr.io/testimage:$(Build.BuildNumber)" >> images.txt
+      pwd
+      ls
+      mkdir pullImages
+      ls $(Build.ArtifactStagingDirectory)
+      echo $(Build.ArtifactStagingDirectory)
+
+- task: PublishBuildArtifacts@1
+  inputs:
+    pathToPublish: '$(Build.ArtifactStagingDirectory)'
+    artifactName: images
+
+- task: DownloadBuildArtifacts@0
+  inputs:
+    buildType: 'current'
+    downloadType: 'single'
+    artifactName: 'images'
+    downloadPath: 'pullImages/'
+
+- script: |
+      pwd
+      ls
+      ls images/
+      car images/*.txt
